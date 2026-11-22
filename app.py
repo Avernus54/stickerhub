@@ -5,7 +5,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import os
 import uuid
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(32)
 
@@ -21,23 +23,32 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+
 def get_db_connection():
-    global schema_ready
     try:
+        import certifi
+
         connection = mysql.connector.connect(
-            host=os.environ.get("MYSQLHOST", os.environ.get("DB_HOST", "localhost")),
-            user=os.environ.get("MYSQLUSER", os.environ.get("DB_USER", "root")),
-            password=os.environ.get("MYSQLPASSWORD", os.environ.get("DB_PASSWORD", "")),
-            database=os.environ.get("MYSQLDATABASE", os.environ.get("DB_NAME", "stickerhub")),
-            port=int(os.environ.get("MYSQLPORT", os.environ.get("DB_PORT", "3306")))
+            host=os.environ.get("MYSQLHOST"),
+            user=os.environ.get("MYSQLUSER"),
+            password=os.environ.get("MYSQLPASSWORD"),
+            database=os.environ.get("MYSQLDATABASE", "stickerhub"),
+            port=int(os.environ.get("MYSQLPORT", "4000")),
+
+            # Secure TiDB Cloud connection
+            ssl_ca=certifi.where(),
+            ssl_verify_cert=True,
+            ssl_verify_identity=True,
+
+            connection_timeout=20
         )
-        if not schema_ready:
-            ensure_database_schema(connection)
-            schema_ready = True
+
         return connection
+
     except Error as error:
         print("DATABASE ERROR:", error)
         return None
+
 
 
 def ensure_database_schema(connection):
