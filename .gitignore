@@ -1,0 +1,10 @@
+# Local secrets and data exports must not be deployed.
+.env
+.env.*
+!.env.example
+database/
+create_password.py
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
